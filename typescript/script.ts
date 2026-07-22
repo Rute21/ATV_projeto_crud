@@ -1,6 +1,6 @@
 // Importando módulos
-import { Aluno } from './aluno';
-import { StorageService } from './storage';
+import { Aluno } from './aluno.js';
+import { StorageService } from './storage.js';
 
 // Classe principal da aplicação
 class AppCRUD {
@@ -184,7 +184,7 @@ class AppCRUD {
         });
 
         // Atualizar contador
-        const contador = document.getElementById('contador-alunos');
+        const contador = document.getElementById('contador');
         if (contador) {
             contador.textContent = `Total: ${alunosFiltrados.length} aluno(s)`;
         }

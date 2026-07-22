@@ -1,4 +1,4 @@
-import { StorageService } from './storage';
+import { StorageService } from './storage.js';
 // Classe principal da aplicação
 class AppCRUD {
     constructor() {
@@ -149,7 +149,7 @@ class AppCRUD {
             listaDiv.appendChild(div);
         });
         // Atualizar contador
-        const contador = document.getElementById('contador-alunos');
+        const contador = document.getElementById('contador');
         if (contador) {
             contador.textContent = `Total: ${alunosFiltrados.length} aluno(s)`;
         }

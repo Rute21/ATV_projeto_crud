@@ -6,14 +6,14 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color: #d9f0ec;
     padding: 20px;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
-    background-color: white;
+    background-color: rgb(169, 204, 202);
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -21,12 +21,12 @@ body {
 
 h1 {
     text-align: center;
-    color: #333;
+    color:  #21413b;
     margin-bottom: 30px;
 }
 
 h2 {
-    color: #555;
+    color:  #36534e;
     margin-bottom: 15px;
 }
 
@@ -38,20 +38,20 @@ label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #555;
+    color: #516968;
 }
 
 input {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid  #799b95;
     border-radius: 5px;
     font-size: 16px;
 }
 
 button {
-    background-color: #007bff;
+    background-color: #7caca4;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -98,3 +98,9 @@ button:hover {
 .aluno-item button:last-of-type:hover {
     background-color: #c82333;
 }
+
+/*h1  #21413b;
+h2 #36534e;
+label  #555;
+input  #799b95;
+button  #7caca4;/*

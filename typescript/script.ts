@@ -1,227 +1,234 @@
-// ============================================
-// INTERFACE (Bônus: tipagem)
-// ============================================
-interface Aluno {
-    id: number;
-    nome: string;
-    idade: number;
-    email: string;
-}
+// Importando módulos
+import { Aluno } from './aluno';
+import { StorageService } from './storage';
 
-// ============================================
-// VARIÁVEIS GLOBAIS
-// ============================================
-let alunos: Aluno[] = [];
-let alunoEditandoId: number | null = null;
+// Classe principal da aplicação
+class AppCRUD {
+    private alunos: Aluno[] = [];
+    private storage: StorageService;
+    private alunoEditando: number | null = null;
 
-// Carregar dados ao iniciar
-window.onload = function() {
-    carregarDoLocalStorage();  // Bônus: LocalStorage
-    renderizarLista();
-    configurarEventos();
-};
-
-// ============================================
-// BÔNUS: LOCALSTORAGE (Persistência)
-// ============================================
-function carregarDoLocalStorage(): void {
-    const dados = localStorage.getItem('alunos_senai');
-    if (dados) {
-        alunos = JSON.parse(dados);
-    }
-}
-
-function salvarNoLocalStorage(): void {
-    localStorage.setItem('alunos_senai', JSON.stringify(alunos));
-}
-
-// ============================================
-// CONFIGURAR EVENTOS
-// ============================================
-function configurarEventos(): void {
-    const formulario = document.getElementById('formulario') as HTMLFormElement;
-    formulario.addEventListener('submit', function(evento) {
-        evento.preventDefault();
-        salvarAluno();
-    });
-
-    // BÔNUS: Pesquisa por nome
-    const busca = document.getElementById('busca') as HTMLInputElement;
-    busca.addEventListener('input', function() {
-        renderizarLista();
-    });
-
-    // BÔNUS: Ordenação
-    const ordenacao = document.getElementById('ordenacao') as HTMLSelectElement;
-    ordenacao.addEventListener('change', function() {
-        renderizarLista();
-    });
-}
-
-// ============================================
-// BÔNUS: VALIDAÇÃO DOS CAMPOS
-// ============================================
-function validarCampos(nome: string, idade: string, email: string): boolean {
-    // Validar nome (mínimo 3 caracteres)
-    if (nome.trim().length < 3) {
-        alert('O nome deve ter pelo menos 3 caracteres!');
-        return false;
+    constructor() {
+        this.storage = new StorageService();
+        this.carregarDados();
+        this.inicializarEventos();
+        this.renderizarLista();
     }
 
-    // Validar idade (1 a 120)
-    const idadeNum = parseInt(idade);
-    if (isNaN(idadeNum) || idadeNum < 1 || idadeNum > 120) {
-        alert('Digite uma idade válida (entre 1 e 120)!');
-        return false;
+    // Carregar dados do LocalStorage
+    private carregarDados(): void {
+        this.alunos = this.storage.carregarAlunos();
     }
 
-    // Validar email (deve ter @ e .)
-    if (!email.includes('@') || !email.includes('.')) {
-        alert('Digite um email válido!');
-        return false;
+    // Salvar dados no LocalStorage
+    private salvarDados(): void {
+        this.storage.salvarAlunos(this.alunos);
     }
 
-    return true;
-}
+    // Inicializar eventos do formulário
+    private inicializarEventos(): void {
+        const formulario = document.getElementById('formulario') as HTMLFormElement;
+        
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processarFormulario();
+        });
 
-// ============================================
-// CREATE E UPDATE (Salvar)
-// ============================================
-function salvarAluno(): void {
-    const nome = (document.getElementById('nome') as HTMLInputElement).value.trim();
-    const idade = (document.getElementById('idade') as HTMLInputElement).value;
-    const email = (document.getElementById('email') as HTMLInputElement).value.trim();
+        // Evento de pesquisa
+        const campoBusca = document.getElementById('busca') as HTMLInputElement;
+        campoBusca.addEventListener('input', () => {
+            this.renderizarLista(campoBusca.value);
+        });
 
-    // BÔNUS: Validação
-    if (!validarCampos(nome, idade, email)) {
-        return;
+        // Evento de ordenação
+        const ordenacao = document.getElementById('ordenacao') as HTMLSelectElement;
+        ordenacao.addEventListener('change', () => {
+            this.renderizarLista();
+        });
     }
 
-    if (alunoEditandoId !== null) {
-        // UPDATE: Atualizar aluno existente
-        const indice = alunos.findIndex(a => a.id === alunoEditandoId);
-        if (indice !== -1) {
-            alunos[indice].nome = nome;
-            alunos[indice].idade = parseInt(idade);
-            alunos[indice].email = email;
+    // Validação dos campos
+    private validarCampos(nome: string, idade: string, email: string): boolean {
+        // Validar nome
+        if (nome.trim().length < 3) {
+            alert('O nome deve ter pelo menos 3 caracteres!');
+            return false;
         }
-        alunoEditandoId = null;
-        (document.getElementById('btn-salvar') as HTMLButtonElement).textContent = 'Cadastrar';
-    } else {
-        // CREATE: Criar novo aluno
-        const novoAluno: Aluno = {
-            id: Date.now(),
-            nome: nome,
-            idade: parseInt(idade),
-            email: email
-        };
-        alunos.push(novoAluno);
+
+        // Validar idade
+        const idadeNum = parseInt(idade);
+        if (isNaN(idadeNum) || idadeNum < 1 || idadeNum > 120) {
+            alert('Digite uma idade válida (entre 1 e 120)!');
+            return false;
+        }
+
+        // Validar email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Digite um email válido!');
+            return false;
+        }
+
+        return true;
     }
 
-    // BÔNUS: Salvar no LocalStorage
-    salvarNoLocalStorage();
+    // Processar formulário (Create/Update)
+    private processarFormulario(): void {
+        const nome = (document.getElementById('nome') as HTMLInputElement).value.trim();
+        const idade = (document.getElementById('idade') as HTMLInputElement).value;
+        const email = (document.getElementById('email') as HTMLInputElement).value.trim();
 
-    // Limpar formulário e atualizar lista
-    (document.getElementById('formulario') as HTMLFormElement).reset();
-    renderizarLista();
-}
+        // Validação
+        if (!this.validarCampos(nome, idade, email)) {
+            return;
+        }
 
-// ============================================
-// READ (Listar com pesquisa e ordenação)
-// ============================================
-function renderizarLista(): void {
-    const listaDiv = document.getElementById('lista-alunos');
-    if (!listaDiv) return;
+        if (this.alunoEditando !== null) {
+            // UPDATE - Atualizar aluno existente
+            const indice = this.alunos.findIndex(a => a.id === this.alunoEditando);
+            if (indice !== -1) {
+                this.alunos[indice] = {
+                    ...this.alunos[indice],
+                    nome,
+                    idade: parseInt(idade),
+                    email
+                };
+            }
+            this.alunoEditando = null;
+            (document.querySelector('#formulario button[type="submit"]') as HTMLButtonElement).textContent = 'Cadastrar';
+        } else {
+            // CREATE - Criar novo aluno
+            const novoAluno: Aluno = {
+                id: Date.now(),
+                nome,
+                idade: parseInt(idade),
+                email,
+                dataCadastro: new Date().toISOString()
+            };
+            this.alunos.push(novoAluno);
+        }
 
-    // BÔNUS: Pesquisa por nome
-    const busca = (document.getElementById('busca') as HTMLInputElement).value.toLowerCase();
-    let alunosFiltrados = alunos.filter(aluno => 
-        aluno.nome.toLowerCase().includes(busca)
-    );
-
-    // BÔNUS: Ordenação dos registros
-    const ordenacao = (document.getElementById('ordenacao') as HTMLSelectElement).value;
-    
-    if (ordenacao === 'nome-asc') {
-        alunosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
-    } else if (ordenacao === 'nome-desc') {
-        alunosFiltrados.sort((a, b) => b.nome.localeCompare(a.nome));
-    } else if (ordenacao === 'idade-asc') {
-        alunosFiltrados.sort((a, b) => a.idade - b.idade);
-    } else if (ordenacao === 'idade-desc') {
-        alunosFiltrados.sort((a, b) => b.idade - a.idade);
+        // Salvar e atualizar
+        this.salvarDados();
+        this.renderizarLista();
+        this.limparFormulario();
     }
 
-    // Limpar lista
-    listaDiv.innerHTML = '';
+    // Pesquisa por nome
+    private filtrarAlunos(busca: string = ''): Aluno[] {
+        let filtrados = [...this.alunos];
 
-    // Mostrar mensagem se não tiver alunos
-    if (alunosFiltrados.length === 0) {
-        listaDiv.innerHTML = '<p class="sem-registros">Nenhum aluno encontrado.</p>';
-        return;
-    }
+        if (busca.trim()) {
+            filtrados = filtrados.filter(aluno => 
+                aluno.nome.toLowerCase().includes(busca.toLowerCase())
+            );
+        }
 
-    // Criar elementos para cada aluno
-    for (let i = 0; i < alunosFiltrados.length; i++) {
-        const aluno = alunosFiltrados[i];
+        // Ordenação dos registros
+        const ordenacao = (document.getElementById('ordenacao') as HTMLSelectElement).value;
         
-        const div = document.createElement('div');
-        div.className = 'aluno-item';
-        div.innerHTML = `
-            <div class="aluno-info">
-                <strong>${i + 1}. ${aluno.nome}</strong><br>
-                <span>${aluno.idade} anos</span> | 
-                <span>${aluno.email}</span>
-            </div>
-            <div class="aluno-botoes">
-                <button class="btn-editar" onclick="editarAluno(${aluno.id})">Editar</button>
-                <button class="btn-excluir" onclick="excluirAluno(${aluno.id})">Excluir</button>
-            </div>
-        `;
-        listaDiv.appendChild(div);
+        switch (ordenacao) {
+            case 'nome-asc':
+                filtrados.sort((a, b) => a.nome.localeCompare(b.nome));
+                break;
+            case 'nome-desc':
+                filtrados.sort((a, b) => b.nome.localeCompare(a.nome));
+                break;
+            case 'idade-asc':
+                filtrados.sort((a, b) => a.idade - b.idade);
+                break;
+            case 'idade-desc':
+                filtrados.sort((a, b) => b.idade - a.idade);
+                break;
+            case 'data-asc':
+                filtrados.sort((a, b) => new Date(a.dataCadastro).getTime() - new Date(b.dataCadastro).getTime());
+                break;
+            case 'data-desc':
+                filtrados.sort((a, b) => new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime());
+                break;
+        }
+
+        return filtrados;
     }
 
-    // Atualizar contador
-    const contador = document.getElementById('contador');
-    if (contador) {
-        contador.textContent = `Total: ${alunosFiltrados.length} aluno(s)`;
-    }
-}
+    // Renderizar lista na tela
+    private renderizarLista(busca: string = ''): void {
+        const listaDiv = document.getElementById('lista-alunos');
+        if (!listaDiv) return;
 
-// ============================================
-// UPDATE (Editar)
-// ============================================
-function editarAluno(id: number): void {
-    const aluno = alunos.find(a => a.id === id);
-    if (!aluno) return;
+        const alunosFiltrados = this.filtrarAlunos(busca);
 
-    (document.getElementById('nome') as HTMLInputElement).value = aluno.nome;
-    (document.getElementById('idade') as HTMLInputElement).value = aluno.idade.toString();
-    (document.getElementById('email') as HTMLInputElement).value = aluno.email;
+        if (alunosFiltrados.length === 0) {
+            listaDiv.innerHTML = '<p class="sem-registros">Nenhum aluno cadastrado.</p>';
+            return;
+        }
 
-    alunoEditandoId = id;
-    (document.getElementById('btn-salvar') as HTMLButtonElement).textContent = 'Atualizar';
-    
-    document.getElementById('nome')?.focus();
-}
-
-// ============================================
-// DELETE (Excluir)
-// ============================================
-function excluirAluno(id: number): void {
-    if (confirm('Tem certeza que deseja excluir este aluno?')) {
-        alunos = alunos.filter(a => a.id !== id);
+        listaDiv.innerHTML = '';
         
-        // BÔNUS: Salvar no LocalStorage
-        salvarNoLocalStorage();
-        
-        renderizarLista();
+        alunosFiltrados.forEach((aluno, indice) => {
+            const div = document.createElement('div');
+            div.className = 'aluno-item';
+            div.innerHTML = `
+                <div class="aluno-info">
+                    <strong>${indice + 1}. ${aluno.nome}</strong><br>
+                    <span>🎂 ${aluno.idade} anos</span> | 
+                    <span>📧 ${aluno.email}</span><br>
+                    <small class="data-cadastro">Cadastrado em: ${new Date(aluno.dataCadastro).toLocaleDateString('pt-BR')}</small>
+                </div>
+                <div class="aluno-acoes">
+                    <button class="btn-editar" onclick="app.editarAluno(${aluno.id})">️ Editar</button>
+                    <button class="btn-excluir" onclick="app.excluirAluno(${aluno.id})">🗑️ Excluir</button>
+                </div>
+            `;
+            listaDiv.appendChild(div);
+        });
 
-        // Se estava editando o aluno excluído, limpar
-        if (alunoEditandoId === id) {
-            (document.getElementById('formulario') as HTMLFormElement).reset();
-            alunoEditandoId = null;
-            (document.getElementById('btn-salvar') as HTMLButtonElement).textContent = 'Cadastrar';
+        // Atualizar contador
+        const contador = document.getElementById('contador-alunos');
+        if (contador) {
+            contador.textContent = `Total: ${alunosFiltrados.length} aluno(s)`;
         }
     }
+
+    // Editar aluno
+    public editarAluno(id: number): void {
+        const aluno = this.alunos.find(a => a.id === id);
+        if (!aluno) return;
+
+        (document.getElementById('nome') as HTMLInputElement).value = aluno.nome;
+        (document.getElementById('idade') as HTMLInputElement).value = aluno.idade.toString();
+        (document.getElementById('email') as HTMLInputElement).value = aluno.email;
+
+        this.alunoEditando = id;
+        (document.querySelector('#formulario button[type="submit"]') as HTMLButtonElement).textContent = 'Atualizar';
+        
+        document.getElementById('nome')?.focus();
+    }
+
+    // Excluir aluno
+    public excluirAluno(id: number): void {
+        if (confirm('Tem certeza que deseja excluir este aluno?')) {
+            this.alunos = this.alunos.filter(a => a.id !== id);
+            this.salvarDados();
+            this.renderizarLista();
+            
+            // Se estava editando o aluno excluído, limpar formulário
+            if (this.alunoEditando === id) {
+                this.limparFormulario();
+            }
+        }
+    }
+
+    // Limpar formulário
+    private limparFormulario(): void {
+        (document.getElementById('formulario') as HTMLFormElement).reset();
+        this.alunoEditando = null;
+        (document.querySelector('#formulario button[type="submit"]') as HTMLButtonElement).textContent = 'Cadastrar';
+    }
 }
+
+// Inicializar aplicação quando o DOM estiver pronto
+let app: AppCRUD;
+document.addEventListener('DOMContentLoaded', () => {
+    app = new AppCRUD();
+});

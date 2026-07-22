@@ -227,8 +227,8 @@ class AppCRUD {
     }
 }
 
-// Inicializar aplicação quando o DOM estiver pronto
-let app: AppCRUD;
-document.addEventListener('DOMContentLoaded', () => {
-    app = new AppCRUD();
-});
+// Tornar o 'app' global para o HTML conseguir clicar nos botões
+declare global {
+    interface Window { app: AppCRUD; }
+}
+window.app = new AppCRUD();

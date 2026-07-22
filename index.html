@@ -50,7 +50,19 @@
                 </div>
 
               
-               
+                <div class="filtros">
+                    <input
+                        type="text"
+                        id="busca"
+                        placeholder="Pesquisar aluno por nome">
+                
+                    <select id="ordenacao">
+                        <option value="nome-asc">Nome (A-Z)</option>
+                        <option value="nome-desc">Nome (Z-A)</option>
+                        <option value="idade-asc">Idade (Menor para Maior)</option>
+                        <option value="idade-desc">Idade (Maior para Menor)</option>
+                    </select>
+                </div>
 
                 <div id="lista-alunos">
                     <p class="sem-registros">Nenhum aluno cadastrado.</p>

@@ -1,71 +1,190 @@
 "use strict";
-// ARRAY PARA GUARDAR OS ALUNOS
+// ============================================
+// VARIÁVEIS GLOBAIS
+// ============================================
 let alunos = [];
-// PEGAR ELEMENTOS DO HTML
-const formulario = document.querySelector("#formulario");
-const listaAlunos = document.querySelector("#lista-alunos");
-// QUANDO CLICAR EM SALVAR
-formulario.addEventListener("submit", (evento) => {
-    evento.preventDefault(); // Impede o formulário de recarregar a página
-    // PEGAR OS DADOS DO FORMULÁRIO
-    const nome = document.querySelector("#nome").value;
-    const idade = document.querySelector("#idade").value;
-    const email = document.querySelector("#email").value;
-    // CRIAR OBJETO COM OS DADOS
-    const aluno = {
-        nome: nome,
-        idade: idade,
-        email: email
-    };
-    // ADICIONAR NO ARRAY
-    alunos.push(aluno);
-    // LIMPAR FORMULÁRIO
-    formulario.reset();
-    // ATUALIZAR A LISTA NA TELA
-    mostrarAlunos();
-});
-// FUNÇÃO PARA MOSTRAR OS ALUNOS NA TELA
-function mostrarAlunos() {
-    // LIMPAR A LISTA ANTES DE ATUALIZAR
-    listaAlunos.innerHTML = "";
-    // SE NÃO TIVER NENHUM ALUNO
-    if (alunos.length === 0) {
-        listaAlunos.innerHTML = "<p>Nenhum aluno cadastrado.</p>";
+let alunoEditandoId = null;
+// Carregar dados ao iniciar
+window.onload = function () {
+    carregarDoLocalStorage(); // Bônus: LocalStorage
+    renderizarLista();
+    configurarEventos();
+};
+// ============================================
+// BÔNUS: LOCALSTORAGE (Persistência)
+// ============================================
+function carregarDoLocalStorage() {
+    const dados = localStorage.getItem('alunos_senai');
+    if (dados) {
+        alunos = JSON.parse(dados);
+    }
+}
+function salvarNoLocalStorage() {
+    localStorage.setItem('alunos_senai', JSON.stringify(alunos));
+}
+// ============================================
+// CONFIGURAR EVENTOS
+// ============================================
+function configurarEventos() {
+    const formulario = document.getElementById('formulario');
+    formulario.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        salvarAluno();
+    });
+    // BÔNUS: Pesquisa por nome
+    const busca = document.getElementById('busca');
+    busca.addEventListener('input', function () {
+        renderizarLista();
+    });
+    // BÔNUS: Ordenação
+    const ordenacao = document.getElementById('ordenacao');
+    ordenacao.addEventListener('change', function () {
+        renderizarLista();
+    });
+}
+// ============================================
+// BÔNUS: VALIDAÇÃO DOS CAMPOS
+// ============================================
+function validarCampos(nome, idade, email) {
+    // Validar nome (mínimo 3 caracteres)
+    if (nome.trim().length < 3) {
+        alert('O nome deve ter pelo menos 3 caracteres!');
+        return false;
+    }
+    // Validar idade (1 a 120)
+    const idadeNum = parseInt(idade);
+    if (isNaN(idadeNum) || idadeNum < 1 || idadeNum > 120) {
+        alert('Digite uma idade válida (entre 1 e 120)!');
+        return false;
+    }
+    // Validar email (deve ter @ e .)
+    if (!email.includes('@') || !email.includes('.')) {
+        alert('Digite um email válido!');
+        return false;
+    }
+    return true;
+}
+// ============================================
+// CREATE E UPDATE (Salvar)
+// ============================================
+function salvarAluno() {
+    const nome = document.getElementById('nome').value.trim();
+    const idade = document.getElementById('idade').value;
+    const email = document.getElementById('email').value.trim();
+    // BÔNUS: Validação
+    if (!validarCampos(nome, idade, email)) {
         return;
     }
-    // PERCORRER O ARRAY E MOSTRAR CADA ALUNO
-    for (let i = 0; i < alunos.length; i++) {
-        const aluno = alunos[i];
-        // CRIAR UM ELEMENTO HTML PARA CADA ALUNO
-        const divAluno = document.createElement("div");
-        divAluno.className = "aluno-item";
-        divAluno.innerHTML = `
-            <strong>${i + 1}. ${aluno.nome}</strong> - ${aluno.idade} anos - ${aluno.email}
-            <button onclick="editarAluno(${i})">Editar</button>
-            <button onclick="excluirAluno(${i})">Excluir</button>
+    if (alunoEditandoId !== null) {
+        // UPDATE: Atualizar aluno existente
+        const indice = alunos.findIndex(a => a.id === alunoEditandoId);
+        if (indice !== -1) {
+            alunos[indice].nome = nome;
+            alunos[indice].idade = parseInt(idade);
+            alunos[indice].email = email;
+        }
+        alunoEditandoId = null;
+        document.getElementById('btn-salvar').textContent = 'Cadastrar';
+    }
+    else {
+        // CREATE: Criar novo aluno
+        const novoAluno = {
+            id: Date.now(),
+            nome: nome,
+            idade: parseInt(idade),
+            email: email
+        };
+        alunos.push(novoAluno);
+    }
+    // BÔNUS: Salvar no LocalStorage
+    salvarNoLocalStorage();
+    // Limpar formulário e atualizar lista
+    document.getElementById('formulario').reset();
+    renderizarLista();
+}
+// ============================================
+// READ (Listar com pesquisa e ordenação)
+// ============================================
+function renderizarLista() {
+    const listaDiv = document.getElementById('lista-alunos');
+    if (!listaDiv)
+        return;
+    // BÔNUS: Pesquisa por nome
+    const busca = document.getElementById('busca').value.toLowerCase();
+    let alunosFiltrados = alunos.filter(aluno => aluno.nome.toLowerCase().includes(busca));
+    // BÔNUS: Ordenação dos registros
+    const ordenacao = document.getElementById('ordenacao').value;
+    if (ordenacao === 'nome-asc') {
+        alunosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
+    }
+    else if (ordenacao === 'nome-desc') {
+        alunosFiltrados.sort((a, b) => b.nome.localeCompare(a.nome));
+    }
+    else if (ordenacao === 'idade-asc') {
+        alunosFiltrados.sort((a, b) => a.idade - b.idade);
+    }
+    else if (ordenacao === 'idade-desc') {
+        alunosFiltrados.sort((a, b) => b.idade - a.idade);
+    }
+    // Limpar lista
+    listaDiv.innerHTML = '';
+    // Mostrar mensagem se não tiver alunos
+    if (alunosFiltrados.length === 0) {
+        listaDiv.innerHTML = '<p class="sem-registros">Nenhum aluno encontrado.</p>';
+        return;
+    }
+    // Criar elementos para cada aluno
+    for (let i = 0; i < alunosFiltrados.length; i++) {
+        const aluno = alunosFiltrados[i];
+        const div = document.createElement('div');
+        div.className = 'aluno-item';
+        div.innerHTML = `
+            <div class="aluno-info">
+                <strong>${i + 1}. ${aluno.nome}</strong><br>
+                <span>${aluno.idade} anos</span> | 
+                <span>${aluno.email}</span>
+            </div>
+            <div class="aluno-botoes">
+                <button class="btn-editar" onclick="editarAluno(${aluno.id})">Editar</button>
+                <button class="btn-excluir" onclick="excluirAluno(${aluno.id})">Excluir</button>
+            </div>
         `;
-        listaAlunos.appendChild(divAluno);
+        listaDiv.appendChild(div);
+    }
+    // Atualizar contador
+    const contador = document.getElementById('contador');
+    if (contador) {
+        contador.textContent = `Total: ${alunosFiltrados.length} aluno(s)`;
     }
 }
-// FUNÇÃO PARA EDITAR UM ALUNO
-function editarAluno(indice) {
-    const aluno = alunos[indice];
-    // COLOCAR OS DADOS NO FORMULÁRIO
-    document.querySelector("#nome").value = aluno.nome;
-    document.querySelector("#idade").value = aluno.idade;
-    document.querySelector("#email").value = aluno.email;
-    // REMOVER O ALUNO ANTIGO (VAI SER ADICIONADO DE NOVO QUANDO SALVAR)
-    alunos.splice(indice, 1);
+// ============================================
+// UPDATE (Editar)
+// ============================================
+function editarAluno(id) {
+    const aluno = alunos.find(a => a.id === id);
+    if (!aluno)
+        return;
+    document.getElementById('nome').value = aluno.nome;
+    document.getElementById('idade').value = aluno.idade.toString();
+    document.getElementById('email').value = aluno.email;
+    alunoEditandoId = id;
+    document.getElementById('btn-salvar').textContent = 'Atualizar';
+    document.getElementById('nome')?.focus();
 }
-// FUNÇÃO PARA EXCLUIR UM ALUNO
-function excluirAluno(indice) {
-    const confirmar = confirm("Tem certeza que deseja excluir?");
-    if (confirmar) {
-        // REMOVER DO ARRAY
-        alunos.splice(indice, 1);
-        // ATUALIZAR A TELA
-        mostrarAlunos();
+// ============================================
+// DELETE (Excluir)
+// ============================================
+function excluirAluno(id) {
+    if (confirm('Tem certeza que deseja excluir este aluno?')) {
+        alunos = alunos.filter(a => a.id !== id);
+        // BÔNUS: Salvar no LocalStorage
+        salvarNoLocalStorage();
+        renderizarLista();
+        // Se estava editando o aluno excluído, limpar
+        if (alunoEditandoId === id) {
+            document.getElementById('formulario').reset();
+            alunoEditandoId = null;
+            document.getElementById('btn-salvar').textContent = 'Cadastrar';
+        }
     }
 }
-// MOSTRAR LISTA VAZIA QUANDO CARREGAR A PÁGINA
-mostrarAlunos();

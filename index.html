@@ -9,32 +9,64 @@
    <script src="js/script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Cadastro de Alunos</h1>
-       
-        
-        <form id="formulario">
-            <h2>Cadastrar Aluno</h2>
-           
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" required>
-           
-            <label for="idade">Idade:</label>
-            <input type="number" id="idade" required>
-           
-            <label for="email">Email:</label>
-            <input type="email" id="email" required>
-           
-            <button type="submit">Salvar</button>
-        </form>
-       
-        
-        <div class="lista">
-            <h2>Alunos Cadastrados</h2>
-            <div id="lista-alunos"></div>
-        </div>
+    
+       <div class="container">
+        <header>
+            <h1>Cadastro de Alunos</h1>
+            
+        </header>
+
+        <main>
+            <!-- Formulário -->
+            <section class="card">
+                <h2>Cadastrar Aluno</h2>
+                <form id="formulario">
+                    <div class="form-group">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="nome" placeholder="Digite o nome" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="idade">Idade:</label>
+                            <input type="number" id="idade" placeholder="Idade" min="1" max="120" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" placeholder="email@exemplo.com" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-salvar" class="btn btn-primary">Cadastrar</button>
+                </form>
+            </section>
+
+            <!-- Lista -->
+            <section class="card">
+                <div class="header-lista">
+                    <h2>Alunos Cadastrados</h2>
+                    <span id="contador" class="contador">Total: 0 aluno(s)</span>
+                </div>
+
+              
+                <div class="filtros">
+                    <input type="text" id="busca" placeholder="🔍 Pesquisar por nome...">
+                    <select id="ordenacao">
+                        <option value="nome-asc">Nome (A-Z)</option>
+                        <option value="nome-desc">Nome (Z-A)</option>
+                        <option value="idade-asc">Idade (Menor)</option>
+                        <option value="idade-desc">Idade (Maior)</option>
+                    </select>
+                </div>
+
+                <div id="lista-alunos">
+                    <p class="sem-registros">Nenhum aluno cadastrado.</p>
+                </div>
+            </section>
+        </main>
     </div>
-   
+
    
 </body>
 </html>
